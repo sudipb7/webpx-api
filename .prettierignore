@@ -1,0 +1,28 @@
+# Ignore build and output directories
+/.next
+
+# Ignore node_modules directory
+/node_modules
+
+# Ignore static files
+/public
+
+# Ignore test files
+/__tests__
+
+# Ignore configuration files
+/.env
+/.env.local
+/.env.development.local
+/.env.test.local
+/.env.production.local
+
+# Ignore version control files
+/.git
+/.gitignore
+
+# Ignore package lock files
+.pnpm-lock.yaml
+
+# Ignore IDE and editor specific files
+/.vscode
