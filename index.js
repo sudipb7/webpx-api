@@ -7,6 +7,7 @@ const multer = require("multer");
 const express = require("express");
 const { optimize } = require("svgo");
 const { v4: uuid } = require("uuid");
+const { Redis } = require("@upstash/redis");
 
 require("dotenv").config({ path: "./.env" });
 
@@ -29,11 +30,19 @@ const storage = multer.diskStorage({
   },
 });
 
+const redis = Redis.fromEnv();
+
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/gif", "image/svg+xml"];
 
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.send("Hello World from Webpix API");
+});
+
+app.get("/logs", async (req, res) => {
+  const totalRequests = await redis.get("requests");
+  const totalFilesTransformed = await redis.get("fileCount");
+  return res.status(200).json({ totalRequests, totalFilesTransformed });
 });
 
 app.post("/convert", upload.array("images", 10), async (req, res) => {
@@ -102,6 +111,9 @@ app.post("/convert", upload.array("images", 10), async (req, res) => {
       })
     );
 
+    await redis.incr("requests");
+    await redis.incrby("fileCount", files.length);
+
     res.json({
       message: "Conversion successful",
       files: convertedFiles,
@@ -113,5 +125,7 @@ app.post("/convert", upload.array("images", 10), async (req, res) => {
 });
 
 app.listen(process.env.PORT, () => {
-  console.log(`Server started at port ${process.env.PORT}`);
+  console.log(
+    `Server running on port ${process.env.PORT} in '${process.env.NODE_ENV.toUpperCase()}' mode`
+  );
 });
